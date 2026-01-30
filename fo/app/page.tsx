@@ -57,8 +57,8 @@ export default function Home() {
   const mqttClientRef = useRef<MqttClient | null>(null)
   
   // Konfigurasi broker MQTT
-  const primaryBroker = 'ws://103.246.107.53: 9001'
-  const fallbackBroker = 'wss://ws-awg.qbyte.web.id'
+  const primaryBroker = 'ws://192.168.0.101:9001'
+  const fallbackBroker = 'wss://ws-awg03.qbyte.web.id'
   
   // Efek untuk inisialisasi tema dari localStorage
   useEffect(() => {

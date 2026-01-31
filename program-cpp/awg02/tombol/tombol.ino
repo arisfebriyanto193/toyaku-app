@@ -16,7 +16,7 @@ const char* mqtt_server = "192.168.0.101"; // IP broker MQTT
 const int mqtt_port = 1883;
 
 /* ================= TOPIC ================= */
-const char* topic1 = "relay/1/status";
+const char* topic1 = "relay/1/status  ";
 const char* topic2 = "relay/2/status";
 const char* topic3 = "relay/3/status";
 

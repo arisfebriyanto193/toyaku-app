@@ -50,6 +50,7 @@ export default function Home() {
     2: false
   })
   
+  const [kurasState, setKurasState] = useState(false)
   // State untuk fullscreen
   const [isFullscreen, setIsFullscreen] = useState(false)
   
@@ -97,6 +98,7 @@ export default function Home() {
         'sensor/temp', 
         'sensor/humidity',
         'sensor/air',
+        'kuras/status',
         'relay/1/status',
         'relay/2/status',
         'pzem004t/voltage',
@@ -163,6 +165,9 @@ export default function Home() {
         case 'pzem004t/frequency':
           setSensorData(prev => ({ ...prev, frequency: num }))
           break
+        case 'kuras/status':
+          setKurasState(data === 'ON')
+          break
       }
     })
     
@@ -178,7 +183,7 @@ export default function Home() {
     
     const newState = !relayStates[relayNumber]
     const state = newState ? 'ON' : 'OFF'
-    const topic = `relay/${relayNumber}/control`
+    const topic = `relay/${relayNumber}/status`
     
     mqttClientRef.current.publish(topic, state, { retain: true })
     setRelayStates(prev => ({ ...prev, [relayNumber]: newState }))
@@ -186,7 +191,25 @@ export default function Home() {
     // Tampilkan notifikasi
     showNotification(`Relay ${relayNumber} diubah ke ${state}`, state === 'ON' ? 'bg-green-500' : 'bg-red-500')
   }
-  
+ const toggleKuras = () => {
+  if (!mqttClientRef.current?.connected) {
+    alert('MQTT belum terhubung')
+    return
+  }
+
+  const newState = !kurasState
+  const state = newState ? 'ON' : 'OFF'
+
+  mqttClientRef.current.publish('kuras/status', state, { retain: true })
+  setKurasState(newState)
+
+  showNotification(
+    `Mode Kuras ${state}`,
+    newState ? 'bg-orange-500' : 'bg-gray-500'
+  )
+}
+ 
+
   // Fungsi untuk toggle tema
   const toggleTheme = () => {
     const newDarkMode = !darkMode
@@ -489,6 +512,52 @@ export default function Home() {
               </div>
             </div>
           </div>
+{/* Kuras Control */}
+<div className="p-4 bg-orange-50 dark:bg-orange-900/40 rounded-lg border border-orange-200 dark:border-orange-800">
+  <div className="flex justify-between items-center mb-2">
+    <h3 className="font-medium text-gray-900 dark:text-white">
+      Mode Kuras Tangki
+    </h3>
+    <span
+      className={`px-2 py-1 rounded text-xs font-medium ${
+        kurasState
+          ? 'bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-200'
+          : 'bg-gray-200 dark:bg-gray-700'
+      }`}
+    >
+      {kurasState ? 'AKTIF' : 'NONAKTIF'}
+    </span>
+  </div>
+
+  <button
+    onClick={toggleKuras}
+    className={`w-full py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center ${
+      kurasState
+        ? 'bg-orange-600 hover:bg-orange-700 text-white'
+        : 'bg-gray-400 hover:bg-gray-500 text-white'
+    }`}
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-5 w-5 mr-2"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 3v18h18M7 14l4-4 4 4m0-8l-4 4-4-4"
+      />
+    </svg>
+    {kurasState ? 'Hentikan Kuras' : 'Mulai Kuras'}
+  </button>
+
+  <p className="mt-2 text-xs text-orange-700 dark:text-orange-300">
+    Pompa akan menyala terus dan berhenti otomatis saat tangki atas penuh.
+  </p>
+</div>
 
           {/* Action Buttons */}
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

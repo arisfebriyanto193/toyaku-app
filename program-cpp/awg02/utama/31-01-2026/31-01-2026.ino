@@ -78,7 +78,7 @@ void setup() {
   digitalWrite(relayFan, LOW);
   digitalWrite(relayKomp, LOW);
   digitalWrite(relayPompa, LOW);
-  digitalWrite(relayValve, HIGH);
+  digitalWrite(relayValve, LOW);
 
   WiFi.config(local_IP, gateway, subnet, dns);
   WiFi.begin(ssid, password);
@@ -206,7 +206,7 @@ void loop() {
     statValve = reqValve;
 
     /* ===== POMPA ===== */
-    statPompa = (waterBawah <= 2800);
+    statPompa = (waterBawah <= 2500);
 
 Serial.println("water bawah"  + String(waterBawah) + " status pompa bawah " + String(statPompa));
 

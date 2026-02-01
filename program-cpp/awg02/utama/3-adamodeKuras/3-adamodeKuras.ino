@@ -1,10 +1,14 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include <PZEM004Tv30.h>
 
 /* ===== WIFI ===== */
 const char* ssid = "awg02";
 const char* password = "awg12345678";
+
+IPAddress local_IP(192, 168, 0, 51);
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress dns(8, 8, 8, 8);
 
 /* ===== MQTT ===== */
 const char* mqtt_server = "192.168.0.101";
@@ -20,12 +24,6 @@ const int relayPompa = 27;
 const int sensorAtas  = 35;
 const int sensorBawah = 34;
 
-#define PZEM_RX 16
-#define PZEM_TX 17
-
-PZEM004Tv30 pzem(Serial2, PZEM_RX, PZEM_TX);
-
-
 /* ===== FAN TIMER ===== */
 #define FAN_INTERVAL 60000UL
 #define FAN_ON_TIME  10000UL
@@ -36,22 +34,24 @@ bool fanRunning = false;
 
 /* ===== VARIABLE ===== */
 int waterlevel = 0;
-bool reqKomp = false;
-bool reqValve = false;
 
+/* request dari MQTT */
+bool reqKomp  = false;
+bool reqValve = false;
+bool modeKuras = false;
+
+/* status relay real */
 bool statKomp  = false;
 bool statValve = false;
 bool statPompa = false;
 
-/* ===== LAST STATUS ===== */
+/* last status */
 bool lastKomp  = false;
 bool lastValve = false;
 bool lastPompa = false;
 int  lastWater = -1;
 
-/* ===== TIMER ===== */
 unsigned long lastCheck = 0;
-unsigned long lastPZEM  = 0;
 
 /* ===== ADC STABIL ===== */
 int bacaADC(int pin) {
@@ -61,6 +61,38 @@ int bacaADC(int pin) {
     delay(5);
   }
   return sum / 10;
+}
+
+/* ===== SETUP ===== */
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n=== ESP32 WATER SYSTEM START ===");
+
+  pinMode(relayFan, OUTPUT);
+  pinMode(relayKomp, OUTPUT);
+  pinMode(relayValve, OUTPUT);
+  pinMode(relayPompa, OUTPUT);
+
+  pinMode(sensorAtas, INPUT);
+  pinMode(sensorBawah, INPUT);
+
+  digitalWrite(relayFan, LOW);
+  digitalWrite(relayKomp, LOW);
+  digitalWrite(relayPompa, LOW);
+  digitalWrite(relayValve, LOW);
+
+  WiFi.config(local_IP, gateway, subnet, dns);
+  WiFi.begin(ssid, password);
+
+  Serial.print("Connecting WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connected");
+
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
 }
 
 /* ===== MQTT CALLBACK ===== */
@@ -73,11 +105,21 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(" => ");
   Serial.println(msg);
 
-  if (String(topic) == "relay/1/status") reqKomp = (msg == "ON");
-  if (String(topic) == "relay/2/status") reqValve = (msg == "ON");
+  if (String(topic) == "relay/1/status") {
+    reqKomp = (msg == "ON");
+  }
+
+  if (String(topic) == "relay/2/status") {
+    reqValve = (msg == "ON");
+  }
+
+  if (String(topic) == "kuras/status") {
+    modeKuras = (msg == "ON");
+    Serial.println(modeKuras ? "[MODE] KURAS AKTIF" : "[MODE] NORMAL");
+  }
 }
 
-/* ===== MQTT CONNECT ===== */
+/* ===== MQTT RECONNECT ===== */
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Connecting MQTT...");
@@ -85,6 +127,7 @@ void reconnect() {
       Serial.println("OK");
       client.subscribe("relay/1/status");
       client.subscribe("relay/2/status");
+      client.subscribe("kuras/status");
     } else {
       Serial.println("FAIL");
       delay(2000);
@@ -96,16 +139,12 @@ void reconnect() {
 void bacaWaterLevel() {
   int val = bacaADC(sensorAtas);
 
-  if (val <= 200)       waterlevel = 100;
+  if (val <= 200)      waterlevel = 100;
   else if (val <= 2000) waterlevel = 70;
   else if (val <= 3200) waterlevel = 20;
   else                  waterlevel = 0;
 
-  Serial.print("[WATER] ADC=");
-  Serial.print(val);
-  Serial.print(" -> ");
-  Serial.print(waterlevel);
-  Serial.println("%");
+  Serial.printf("[SENSOR] Atas ADC=%d -> %d%%\n", val, waterlevel);
 }
 
 /* ===== FAN CONTROL ===== */
@@ -134,59 +173,6 @@ void kontrolFan() {
   }
 }
 
-/* ===== PZEM READ & MQTT ===== */
-void bacaPZEM() {
-  float voltage   = pzem.voltage();
-  float current   = pzem.current();
-  float power     = pzem.power();
-  float energy    = pzem.energy();
-  float frequency = pzem.frequency();
-  float pf        = pzem.pf();
-
-  if (!isnan(voltage)) {
-    client.publish("pzem004t/voltage", String(voltage, 1).c_str(), true);
-    Serial.print("[PZEM] V = "); Serial.println(voltage);
-  }
-  if (!isnan(current)) {
-    client.publish("pzem004t/current", String(current, 2).c_str(), true);
-  }
-  if (!isnan(power)) {
-    client.publish("pzem004t/power", String(power, 1).c_str(), true);
-  }
-  if (!isnan(energy)) {
-    client.publish("pzem004t/energy", String(energy, 2).c_str(), true);
-  }
-  if (!isnan(pf)) {
-    client.publish("pzem004t/pf", String(pf, 2).c_str(), true);
-  }
-  if (!isnan(frequency)) {
-    client.publish("pzem004t/frequency", String(frequency, 1).c_str(), true);
-  }
-}
-
-/* ===== SETUP ===== */
-void setup() {
-  Serial.begin(115200);
-
-  pinMode(relayFan, OUTPUT);
-  pinMode(relayKomp, OUTPUT);
-  pinMode(relayValve, OUTPUT);
-  pinMode(relayPompa, OUTPUT);
-
-  digitalWrite(relayValve, HIGH);
-
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) delay(500);
-
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
-
-Serial2.begin(9600, SERIAL_8N1, PZEM_RX, PZEM_TX);
-
-
-  Serial.println("System ready");
-}
-
 /* ===== LOOP ===== */
 void loop() {
   if (!client.connected()) reconnect();
@@ -200,6 +186,7 @@ void loop() {
     bacaWaterLevel();
     int waterBawah = bacaADC(sensorBawah);
 
+    /* ===== KOMPRESOR ===== */
     if (waterlevel == 100) {
       statKomp = false;
       reqKomp  = false;
@@ -207,13 +194,32 @@ void loop() {
       statKomp = reqKomp;
     }
 
+    /* ===== VALVE ===== */
     statValve = reqValve;
-    statPompa = (waterBawah <= 2800);
+
+    /* ===== POMPA ===== */
+    if (modeKuras) {
+      // MODE KURAS
+      if (waterlevel == 100) {
+        statPompa = false;
+        modeKuras = false; // otomatis balik normal
+        Serial.println("[KURAS] Tangki atas penuh -> STOP");
+        client.publish("kuras/status", "OFF", true);
+      } else {
+        statPompa = true;
+      }
+    } else {
+      // MODE NORMAL
+      statPompa = (waterBawah <= 2500);
+    }
+
+    Serial.println("Water bawah: " + String(waterBawah));
 
     digitalWrite(relayKomp, statKomp);
     digitalWrite(relayPompa, statPompa);
-    digitalWrite(relayValve, statValve ? 1 : 0);
+    digitalWrite(relayValve, statValve);
 
+    /* ===== MQTT PUBLISH ===== */
     if (waterlevel != lastWater) {
       client.publish("sensor/water", String(waterlevel).c_str(), true);
       lastWater = waterlevel;
@@ -223,11 +229,17 @@ void loop() {
       client.publish("relay/1/status", statKomp ? "ON" : "OFF", true);
       lastKomp = statKomp;
     }
-  }
 
-  /* ===== PZEM tiap 2 detik ===== */
-  if (millis() - lastPZEM > 2000) {
-    lastPZEM = millis();
-    bacaPZEM();
+    if (statValve != lastValve) {
+      client.publish("relay/2/status", statValve ? "ON" : "OFF", true);
+      lastValve = statValve;
+    }
+
+    if (statPompa != lastPompa) {
+      client.publish("status/pompa", statPompa ? "ON" : "OFF", true);
+      lastPompa = statPompa;
+    }
+
+    Serial.println("----------------------------------");
   }
 }

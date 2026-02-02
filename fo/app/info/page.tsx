@@ -1,7 +1,8 @@
-'use client'
+"use client"
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import QRCode from 'react-qr-code'
 
 export default function InfoPage() {
     const router = useRouter()
@@ -21,7 +22,8 @@ export default function InfoPage() {
         userUbuntu: process.env.NEXT_PUBLIC_USER || '-',
         brokerMqtt1: process.env.NEXT_PUBLIC_BROKER_URL || '-',
         brokerMqtt2: process.env.NEXT_PUBLIC_BROKER2_URL || '-',
-        truePin: process.env.NEXT_PUBLIC_INFO_PIN || '123456'
+        truePin: process.env.NEXT_PUBLIC_INFO_PIN || '123456',
+        domain: process.env.NEXT_PUBLIC_DOMAIN || '-'
     }
     const handleMaskedValue = (value: string) => {
         return showPasswords ? value : '••••••••'
@@ -153,6 +155,45 @@ export default function InfoPage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Domain & QR Code Card */}
+                {config.domain !== '-' && (
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <div className="bg-green-50 dark:bg-green-900/20 px-6 py-4 border-b border-green-100 dark:border-green-800/30">
+                            <h2 className="text-lg font-semibold text-green-800 dark:text-green-300 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                </svg>
+                                Akses Publik (Domain)
+                            </h2>
+                        </div>
+                        <div className="p-6">
+                            <div className="flex flex-col md:flex-row items-center md:items-start md:space-x-8 space-y-6 md:space-y-0 text-center md:text-left">
+                                <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+                                    <QRCode value={config.domain} size={150} />
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                    <div>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                            Anda dapat mengakses dashboard ini melalui domain publik berikut:
+                                        </p>
+                                        <a
+                                            href={config.domain}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-lg font-bold text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                        >
+                                            {config.domain}
+                                        </a>
+                                    </div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                                        Scan QR Code di samping menggunakan smartphone untuk membuka dashboard secara langsung.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Toggle Button */}
                 <div className="flex justify-center pt-4">

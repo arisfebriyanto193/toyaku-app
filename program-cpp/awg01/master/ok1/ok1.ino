@@ -2,26 +2,26 @@
 #include <PubSubClient.h>
 
 /* ===== WIFI ===== */
-const char* ssid = "awg02";
-const char* password = "awg12345678";
+const char* ssid = "Toyaku2025";
+const char* password = "Toyaku2025";
 
-IPAddress local_IP(192, 168, 0, 51);
+IPAddress local_IP(192, 168, 0, 2);
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(8, 8, 8, 8);
 
 /* ===== MQTT ===== */
-const char* mqtt_server = "192.168.0.101";
+const char* mqtt_server = "192.168.0.100";
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 /* ===== PIN ===== */
 const int relayFan   = 13;
 const int relayKomp  = 12;
-const int relayValve = 14;
-const int relayPompa = 27;
+const int relayValve = 27;
+const int relayPompa = 14;
 
-const int sensorAtas  = 35;
+const int sensorAtas  = 32;
 const int sensorBawah = 34;
 
 /* ===== FAN TIMER ===== */
@@ -72,10 +72,9 @@ void setup() {
   pinMode(relayKomp, OUTPUT);
   pinMode(relayValve, OUTPUT);
   pinMode(relayPompa, OUTPUT);
-  pinMode (2, OUTPUT);
 
-  pinMode(sensorAtas, INPUT);
-  pinMode(sensorBawah, INPUT);
+  pinMode(sensorAtas, INPUT_PULLUP);
+  pinMode(sensorBawah, INPUT_PULLUP);
 
   digitalWrite(relayFan, LOW);
   digitalWrite(relayKomp, LOW);
@@ -84,7 +83,7 @@ void setup() {
 
   WiFi.config(local_IP, gateway, subnet, dns);
   WiFi.begin(ssid, password);
-digitalWrite(2, 1);
+
   Serial.print("Connecting WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -94,7 +93,6 @@ digitalWrite(2, 1);
 
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
-digitalWrite(2, 0);
 }
 
 /* ===== MQTT CALLBACK ===== */
@@ -140,55 +138,29 @@ void reconnect() {
 /* ===== WATER LEVEL ===== */
 void bacaWaterLevel() {
   int val = bacaADC(sensorAtas);
-    digitalWrite(2, 0);
+
   if (val <= 200)      waterlevel = 100;
   else if (val <= 2000) waterlevel = 70;
   else if (val <= 3200) waterlevel = 20;
   else                  waterlevel = 0;
 
   Serial.printf("[SENSOR] Atas ADC=%d -> %d%%\n", val, waterlevel);
-      digitalWrite(2, 1);
 }
 
 /* ===== FAN CONTROL ===== */
-void kontrolFan() {
-  if (!statKomp) {
-    digitalWrite(relayFan, LOW);
-    fanRunning = false;
-    lastFanCycle = millis();
-    return;
-  }
-
-  unsigned long now = millis();
-
-  if (!fanRunning && (now - lastFanCycle >= FAN_INTERVAL)) {
-    fanRunning = true;
-    fanOnStart = now;
-    digitalWrite(relayFan, HIGH);
-    Serial.println("[FAN] ON");
-  }
-
-  if (fanRunning && (now - fanOnStart >= FAN_ON_TIME)) {
-    fanRunning = false;
-    lastFanCycle = now;
-    digitalWrite(relayFan, LOW);
-    Serial.println("[FAN] OFF");
-  }
-}
 
 /* ===== LOOP ===== */
 void loop() {
- // digitalWrite(2, 1);
   if (!client.connected()) reconnect();
   client.loop();
 
-  kontrolFan();
+ 
 
   if (millis() - lastCheck > 1000) {
     lastCheck = millis();
 
     bacaWaterLevel();
-    int waterBawah = bacaADC(sensorBawah);
+    int waterBawah = analogRead(sensorBawah);
 
     /* ===== KOMPRESOR ===== */
     if (waterlevel == 100) {
@@ -220,6 +192,7 @@ void loop() {
     Serial.println("Water bawah: " + String(waterBawah));
 
     digitalWrite(relayKomp, statKomp);
+       digitalWrite(relayFan, statKomp);
     digitalWrite(relayPompa, statPompa);
     digitalWrite(relayValve, statValve);
 
@@ -245,6 +218,5 @@ void loop() {
     }
 
     Serial.println("----------------------------------");
-
   }
 }

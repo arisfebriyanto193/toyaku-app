@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import mqtt, { MqttClient } from 'mqtt';
+import { useRouter } from 'next/navigation';
 
 // --- Types ---
 interface EnergyData {
@@ -14,8 +15,8 @@ interface EnergyData {
 }
 
 const BROKERS = [
-  { url: 'ws://192.168.1.100:9001', name: 'Primary Broker (QByte)' },
-  { url: 'ws://localhost:9001', name: 'Secondary Broker (Local)' }
+  { url: process.env.NEXT_PUBLIC_BROKER_URL || 'ws://[IP_ADDRESS]', name: 'Primary Broker (QByte)' },
+  { url: process.env.NEXT_PUBLIC_BROKER2_URL || 'wss://ws-awg03.qbyte.web.id', name: 'Secondary Broker (Local)' }
 ];
 
 export default function EnergyMonitor() {
@@ -27,6 +28,7 @@ export default function EnergyMonitor() {
   const [lastUpdated, setLastUpdated] = useState('-');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [resetStatus, setResetStatus] = useState('Reset Energy');
+  const router = useRouter();
 
   // Refs for MQTT
   const clientRef = useRef<MqttClient | null>(null);
@@ -142,6 +144,26 @@ export default function EnergyMonitor() {
         <div className="container mx-auto px-4 py-8 relative">
           {/* Header */}
           <header className="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+             <button
+  onClick={() => router.push('/')}
+  className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 shadow-md hover:shadow-lg"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className="h-5 w-5 mr-2"
+    fill="none"
+    viewBox="0 0 24 24"
+    stroke="currentColor"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 19l-7-7 7-7"
+    />
+  </svg>
+  Kembali
+</button>
             <div className="flex items-center">
               <div className="mr-6 p-3 rounded-2xl bg-blue-500 text-white shadow-lg animate-bounce-slow">
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
@@ -151,6 +173,8 @@ export default function EnergyMonitor() {
                 <p className="text-gray-600 dark:text-gray-400 font-medium">Real-time Monitoring System</p>
               </div>
             </div>
+            
+           
             
             <div className="flex items-center space-x-4">
               <button onClick={handleReset} className="px-6 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold shadow-lg transition-all transform hover:scale-105 active:scale-95">

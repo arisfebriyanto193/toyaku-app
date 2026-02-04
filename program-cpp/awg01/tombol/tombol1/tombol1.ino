@@ -2,21 +2,21 @@
 #include <PubSubClient.h>
 
 /* ================= WIFI ================= */
-const char* ssid     = "awg02";
-const char* password = "awg12345678";
+const char* ssid     = "Toyaku2025";
+const char* password = "Toyaku2025";
 
 /* ======== STATIC IP SETTING ======== */
-IPAddress local_IP(192, 168, 0, 50);
+IPAddress local_IP(192, 168, 0, 30);
 IPAddress gateway(192, 168, 0, 1);
 IPAddress subnet(255, 255, 255, 0);
 IPAddress dns(8, 8, 8, 8);
 
 /* ================= MQTT ================= */
-const char* mqtt_server = "192.168.0.101"; // IP broker MQTT
+const char* mqtt_server = "192.168.0.100"; // IP broker MQTT
 const int mqtt_port = 1883;
 
 /* ================= TOPIC ================= */
-const char* topic1 = "relay/1/status  ";
+const char* topic1 = "relay/1/status";
 const char* topic2 = "relay/2/status";
 const char* topic3 = "relay/3/status";
 

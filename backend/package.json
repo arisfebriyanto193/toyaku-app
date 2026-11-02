@@ -1,0 +1,26 @@
+{
+  "name": "toyaku-backend",
+  "version": "1.0.0",
+  "description": "Backend recorder MQTT ke MySQL dengan interval dan filter topik yang dapat diatur dari frontend",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "mqtt",
+    "mysql",
+    "recorder",
+    "iot",
+    "toyaku"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mqtt": "^5.10.3",
+    "mysql2": "^3.12.0"
+  }
+}

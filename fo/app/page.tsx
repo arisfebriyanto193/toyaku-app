@@ -670,6 +670,11 @@ export default function Home() {
                 </svg>
                 Daya
               </button>
+
+              <button onClick={() => router.push('/recorder')} className="inline-flex items-center px-4 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-500 transition-colors duration-300 shadow-md hover:shadow-lg">
+                <span className="mr-2">💾</span>
+                Perekam Data MQTT
+              </button>
             </div>
           </div>
         </div>

@@ -204,7 +204,7 @@ export default function EnergyMonitor() {
           </div>
 
           {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
             <Card title="Voltage" value={data.voltage} unit="V" icon="⚡" colorClass="from-blue-500" progress={(parseFloat(data.voltage)/250)*100} footer="Range: 0-250V" />
             <Card title="Current" value={data.current} unit="A" icon="🌊" colorClass="from-emerald-500" progress={(parseFloat(data.current)/10)*100} footer="Range: 0-10A" />
             <Card title="Power" value={data.power} unit="W" icon="🔥" colorClass="from-orange-500" progress={(parseFloat(data.power)/2000)*100} footer="Range: 0-2000W" />

@@ -253,7 +253,7 @@ export default function RecorderPage() {
         </div>
 
         {/* Status Indicators */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {/* Backend Status */}
           <div className="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4">
             <div className="text-xs font-semibold uppercase text-slate-400">Backend Server</div>

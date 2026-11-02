@@ -320,16 +320,16 @@ export default function Home() {
     <div className="min-h-full flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex justify-between items-center">
+          <div className="flex items-center space-x-3">
             <div className="flex items-center">
               {/* Logo Toyaku */}
-              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                <span className="text-white font-bold">T</span>
+              <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">T</span>
               </div>
-              <h1 className="ml-2 text-2xl font-bold text-gray-900 dark:text-white">Toyaku</h1>
+              <h1 className="ml-2 text-xl font-bold text-gray-900 dark:text-white">Toyaku</h1>
             </div>
-            <span className="hidden sm:inline-block px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               Generator Air dari Udara
             </span>
           </div>
@@ -390,26 +390,26 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="flex-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3">
           {/* Status Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
             {/* Water Level Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 relative overflow-hidden transition-transform duration-300 hover:scale-105">
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-blue-100 dark:bg-blue-900 rounded-full w-24 h-24 opacity-20"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3.5 relative overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-blue-100 dark:bg-blue-900 rounded-full w-20 h-20 opacity-20"></div>
               <div className="relative z-10 flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="p-2.5 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Level Air</h3>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <div className="ml-3">
+                  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Level Air</h3>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {sensorData.water_level !== null ? `${sensorData.water_level} %` : '-- %'}
                   </p>
                 </div>
               </div>
-              <div className="relative mt-6 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div className="relative mt-3 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   className="absolute top-0 left-0 h-full bg-blue-500 rounded-full transition-all duration-1000"
                   style={{ width: `${sensorData.water_level || 0}%` }}
@@ -418,17 +418,17 @@ export default function Home() {
             </div>
 
             {/* Temperature Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 relative overflow-hidden transition-transform duration-300 hover:scale-105">
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-red-100 dark:bg-red-900 rounded-full w-24 h-24 opacity-20"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3.5 relative overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-red-100 dark:bg-red-900 rounded-full w-20 h-20 opacity-20"></div>
               <div className="relative z-10 flex items-center">
-                <div className="p-3 rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="p-2.5 rounded-full bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Suhu</h3>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <div className="ml-3">
+                  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Suhu</h3>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {sensorData.temperature !== null ? `${sensorData.temperature} °C` : '-- °C'}
                   </p>
                 </div>
@@ -436,17 +436,17 @@ export default function Home() {
             </div>
 
             {/* Humidity Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 relative overflow-hidden transition-transform duration-300 hover:scale-105">
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-green-100 dark:bg-green-900 rounded-full w-24 h-24 opacity-20"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3.5 relative overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-green-100 dark:bg-green-900 rounded-full w-20 h-20 opacity-20"></div>
               <div className="relative z-10 flex items-center">
-                <div className="p-3 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="p-2.5 rounded-full bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Kelembaban</h3>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <div className="ml-3">
+                  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Kelembaban</h3>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {sensorData.humidity !== null ? `${sensorData.humidity} %` : '-- %'}
                   </p>
                 </div>
@@ -454,17 +454,17 @@ export default function Home() {
             </div>
 
             {/* Air Quality Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 relative overflow-hidden transition-transform duration-300 hover:scale-105">
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-yellow-100 dark:bg-yellow-900 rounded-full w-24 h-24 opacity-20"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3.5 relative overflow-hidden transition-transform duration-300 hover:scale-105">
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 bg-yellow-100 dark:bg-yellow-900 rounded-full w-20 h-20 opacity-20"></div>
               <div className="relative z-10 flex items-center">
-                <div className="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="p-2.5 rounded-full bg-yellow-100 dark:bg-yellow-900 text-yellow-600 dark:text-yellow-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Kualitas Udara</h3>
-                  <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <div className="ml-3">
+                  <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400">Kualitas Udara</h3>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
                     {sensorData.air_quality !== null ? `${sensorData.air_quality} ug/m3` : '-- ug/m3'}
                   </p>
                 </div>
@@ -474,11 +474,11 @@ export default function Home() {
 
           {/* Water Visualization and Controls - Conditional Rendering */}
           {(!isRestricted || isControlsUnlocked) ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
               {/* Water Tank Visualization */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 col-span-1 lg:col-span-2 transition-transform duration-300 hover:scale-[1.01]">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Status Tangki Air</h2>
-                <div className="relative h-64 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 col-span-1 md:col-span-2 transition-transform duration-300 hover:scale-[1.01]">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Status Tangki Air</h2>
+                <div className="relative h-48 md:h-52 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                   {/* Water level visualization */}
                   <div
                     className="absolute bottom-0 left-0 right-0 bg-blue-500 transition-all duration-1000"
@@ -515,7 +515,7 @@ export default function Home() {
                     className="absolute left-0 right-0 flex justify-center items-center"
                     style={{ bottom: `${sensorData.water_level || 0}%` }}
                   >
-                    <div className="bg-white dark:bg-gray-800 px-2 py-1 rounded text-xs font-medium text-blue-600 dark:text-blue-400 shadow-sm">
+                    <div className="bg-white dark:bg-gray-800 px-2 py-0.5 rounded text-xs font-semibold text-blue-600 dark:text-blue-400 shadow-sm">
                       {sensorData.water_level !== null ? sensorData.water_level : 0}%
                     </div>
                   </div>
@@ -523,14 +523,14 @@ export default function Home() {
               </div>
 
               {/* Controls */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 transition-transform duration-300 hover:scale-[1.01]">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Kontrol Perangkat</h2>
-                <div className="space-y-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 transition-transform duration-300 hover:scale-[1.01]">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Kontrol Perangkat</h2>
+                <div className="space-y-2.5">
                   {/* Condenser Control */}
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-gray-900 dark:text-white">Kondensor</h3>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${relayStates[1]
+                  <div className="p-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Kondensor</h3>
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${relayStates[1]
                         ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                         : 'bg-gray-200 dark:bg-gray-700'
                         }`}>
@@ -539,12 +539,12 @@ export default function Home() {
                     </div>
                     <button
                       onClick={() => toggleRelay(1)}
-                      className={`w-full py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center ${relayStates[1]
+                      className={`w-full py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center text-sm font-medium ${relayStates[1]
                         ? 'bg-green-500 hover:bg-green-600 text-white'
                         : 'bg-red-500 hover:bg-red-600 text-white'
                         }`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
                       </svg>
                       {relayStates[1] ? 'Matikan Kondensor' : 'Nyalakan Kondensor'}
@@ -552,10 +552,10 @@ export default function Home() {
                   </div>
 
                   {/* Pump Control */}
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-gray-900 dark:text-white">Pompa Air</h3>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${relayStates[2]
+                  <div className="p-2.5 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex justify-between items-center mb-1.5">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Pompa Air</h3>
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${relayStates[2]
                         ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
                         : 'bg-gray-200 dark:bg-gray-700'
                         }`}>
@@ -564,12 +564,12 @@ export default function Home() {
                     </div>
                     <button
                       onClick={() => toggleRelay(2)}
-                      className={`w-full py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center ${relayStates[2]
+                      className={`w-full py-2 px-3 rounded-lg transition-all duration-300 flex items-center justify-center text-sm font-medium ${relayStates[2]
                         ? 'bg-green-500 hover:bg-green-600 text-white'
                         : 'bg-red-500 hover:bg-red-600 text-white'
                         }`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {relayStates[2] ? 'Matikan Pompa' : 'Nyalakan Pompa'}
@@ -577,10 +577,10 @@ export default function Home() {
                   </div>
 
                   {/* Kuras Control */}
-                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800/50">
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium text-gray-900 dark:text-white">Mode Kuras</h3>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${kurasState
+                  <div className="p-2.5 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-100 dark:border-orange-800/50">
+                    <div className="flex justify-between items-center mb-1">
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-white">Mode Kuras</h3>
+                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${kurasState
                         ? 'bg-orange-200 dark:bg-orange-800 text-orange-900 dark:text-orange-200'
                         : 'bg-gray-200 dark:bg-gray-700'
                         }`}>
@@ -589,14 +589,14 @@ export default function Home() {
                     </div>
                     <button
                       onClick={() => setIsKurasModalOpen(true)}
-                      className={`w-full py-2 px-4 rounded-lg transition-all duration-300 flex items-center justify-center text-sm ${kurasState
+                      className={`w-full py-1.5 px-3 rounded-lg transition-all duration-300 flex items-center justify-center text-xs font-medium ${kurasState
                         ? 'bg-orange-600 hover:bg-orange-700 text-white'
                         : 'bg-gray-400 hover:bg-gray-500 text-white'
                         }`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 mr-2"
+                        className="h-3.5 w-3.5 mr-1.5"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -610,7 +610,7 @@ export default function Home() {
                       </svg>
                       {kurasState ? 'Hentikan Kuras' : 'Mulai Kuras'}
                     </button>
-                    <p className="mt-2 text-xs text-orange-700 dark:text-orange-300">
+                    <p className="mt-1 text-[11px] text-orange-700 dark:text-orange-300">
                       Otomatis berhenti saat penuh.
                     </p>
                   </div>
@@ -618,20 +618,20 @@ export default function Home() {
               </div>
             </div>
           ) : (
-            <div className="flex justify-center mb-12">
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-lg w-full text-center border-l-4 border-blue-500">
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="flex justify-center mb-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg max-w-lg w-full text-center border-l-4 border-blue-500">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Kontrol Terkunci</h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Kontrol Terkunci</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                   Akses kontrol perangkat dibatasi untuk koneksi publik. Silakan masukkan PIN untuk membuka akses kontrol.
                 </p>
                 <button
                   onClick={() => setIsUnlockModalOpen(true)}
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md w-full"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md w-full text-sm"
                 >
                   Buka Kontrol Perangkat
                 </button>
@@ -641,38 +641,38 @@ export default function Home() {
 
 
           {/* Action Buttons */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <button onClick={() => router.push('/info')} className="inline-flex items-center px-4 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors duration-300 shadow-md hover:shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="max-w-7xl mx-auto py-2">
+            <div className="flex flex-wrap gap-2.5 justify-center md:justify-start">
+              <button onClick={() => router.push('/info')} className="inline-flex items-center px-3.5 py-2 rounded-lg bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 transition-colors duration-300 shadow hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                info
+                Info
               </button>
 
-              <button className="inline-flex items-center px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 shadow-md hover:shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button className="inline-flex items-center px-3.5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 shadow hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Tentang Toyaku
               </button>
 
-              <button className="inline-flex items-center px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 shadow-md hover:shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <button className="inline-flex items-center px-3.5 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white text-xs font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 shadow hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Cara Kerja Toyaku
               </button>
 
-              <button onClick={() => router.push('/daya')} className="inline-flex items-center px-4 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors duration-300 shadow-md hover:shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+              <button onClick={() => router.push('/daya')} className="inline-flex items-center px-3.5 py-2 rounded-lg bg-blue-500 text-white text-xs font-medium hover:bg-blue-600 transition-colors duration-300 shadow hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
                 </svg>
                 Daya
               </button>
 
-              <button onClick={() => router.push('/recorder')} className="inline-flex items-center px-4 py-3 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-500 transition-colors duration-300 shadow-md hover:shadow-lg">
-                <span className="mr-2">💾</span>
+              <button onClick={() => router.push('/recorder')} className="inline-flex items-center px-3.5 py-2 rounded-lg bg-sky-600 text-white text-xs font-medium hover:bg-sky-500 transition-colors duration-300 shadow hover:shadow-md">
+                <span className="mr-1.5">💾</span>
                 Perekam Data MQTT
               </button>
             </div>
@@ -681,13 +681,12 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              &copy; 2025 Toyaku Generator Air Atmosfer. Semua hak dilindungi.
-            </p>
-            <div className="mt-4 md:mt-0 flex space-x-6">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-2">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 flex flex-col md:flex-row justify-between items-center text-xs">
+          <p className="text-gray-500 dark:text-gray-400">
+            &copy; 2025 Toyaku Generator Air Atmosfer. Semua hak dilindungi.
+          </p>
+          <div className="mt-2 md:mt-0 flex space-x-4">
               <button className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -706,8 +705,7 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
 
       {/* Modal Konfirmasi Kuras */}
       {isKurasModalOpen && (

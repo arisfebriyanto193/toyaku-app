@@ -355,6 +355,19 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
 
   // -- Perintah Mode Kuras --
   if (topicStr == TOPIC_SUB_KURAS || topicStr == TOPIC_LEGACY_SUB_KURAS) {
+    if (msg.length() == 0) return; // Abaikan pesan kosong saat broker clear retained
+
+    // Proteksi saat booting: jika pesan "ON" diterima dalam 8 detik pertama boot,
+    // ini adalah pesan retained usang di broker dari sesi sebelumnya.
+    // Kita abaikan dan langsung paksa broker menyimpan kuras OFF.
+    if (msg == "ON" && millis() < 8000) {
+      Serial.println(F("[BOOT PROTECT] Mengabaikan perintah kuras ON lama dari broker (stale retained)."));
+      mqtt.publish(TOPIC_PUB_KURAS, "OFF", true);
+      mqtt.publish("kuras/status", "OFF", true);
+      mqtt.publish(TOPIC_SUB_KURAS, "", true);
+      return;
+    }
+
     if (xSemaphoreTake(xMutexState, pdMS_TO_TICKS(100)) == pdTRUE) {
       modeKuras = (msg == "ON");
       Serial.printf("[CMD] Mode Kuras: %s\n", modeKuras ? "AKTIF" : "NONAKTIF");
@@ -381,6 +394,13 @@ bool mqttReconnect() {
   Serial.print("[MQTT] Menghubungkan...");
   if (mqtt.connect(mqtt_clientID)) {
     Serial.println(" OK!");
+
+    // --- Inisialisasi awal saat terkoneksi ---
+    // Pastikan status kuras OFF dipublish ke broker (retain: true)
+    mqtt.publish(TOPIC_PUB_KURAS, "OFF", true);
+    mqtt.publish("kuras/status", "OFF", true);
+    // Bersihkan retained message command lama di broker agar tidak trigger kuras saat boot
+    mqtt.publish(TOPIC_SUB_KURAS, "", true);
 
     mqtt.subscribe(TOPIC_SUB_KOMPRESOR);
     mqtt.subscribe(TOPIC_LEGACY_SUB_KOMP);
@@ -542,7 +562,8 @@ void taskSensorKontrol(void* pvParameters) {
       Serial.printf("[BOOT] Tangki atas: %d%% (ADC: %d)\n", (int)levelAtas, rawAtasInit);
       Serial.printf("[BOOT] Tangki bawah: %d%% (ADC: %d)\n", (int)levelBawah, rawBawahInit);
 
-      autoRestart = true; // Auto-restart aktif saat boot
+      autoRestart = true;  // Auto-restart aktif saat boot
+      modeKuras   = false; // Pastikan mode kuras NONAKTIF saat boot
 
       if (levelAtas >= 100) {
         Serial.println(F("[BOOT] Tangki atas PENUH -> Tetap IDLE (auto-restart tetap aktif)."));

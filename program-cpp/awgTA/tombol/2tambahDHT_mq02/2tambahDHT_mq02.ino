@@ -15,7 +15,7 @@
  * ============================================================ */
 
 /* ================= WIFI ================= */
-const char* ssid     = "awg02";
+const char* ssid     = "awg";
 const char* password = "awg12345678";
 
 /* ======== STATIC IP SETTING ======== */
@@ -132,6 +132,11 @@ void setup() {
   pinMode(BTN2, INPUT_PULLUP);
   pinMode(BTN3, INPUT_PULLUP);
 
+  // Inisialisasi posisi awal saklar saat boot agar tidak memicu publish palsu
+  lastVal1 = (digitalRead(BTN1) == LOW) ? 1 : 0;
+  lastVal2 = (digitalRead(BTN2) == LOW) ? 1 : 0;
+  lastVal3 = (digitalRead(BTN3) == LOW) ? 1 : 0;
+
   dht.begin();
   setup_wifi();
 
@@ -168,8 +173,8 @@ void loop() {
     Serial.printf("[TOMBOL] BTN1 Kompresor -> %s\n", state);
 
     if (client.connected()) {
-      // Kirim perintah ke ESP32 Master
-      client.publish(TOPIC_CMD_KOMPRESOR, state, true);
+      // Kirim perintah tanpa retain agar broker tidak menyimpan perintah usang
+      client.publish(TOPIC_CMD_KOMPRESOR, state, false);
       // Kirim juga ke topik legacy agar dashboard sinkron
       client.publish(TOPIC_LEGACY_RELAY1, state, true);
     }
@@ -183,8 +188,8 @@ void loop() {
     Serial.printf("[TOMBOL] BTN2 Pompa Out -> %s\n", state);
 
     if (client.connected()) {
-      // Kirim perintah ke ESP32 Master
-      client.publish(TOPIC_CMD_POMPA_OUT, state, true);
+      // Kirim perintah tanpa retain
+      client.publish(TOPIC_CMD_POMPA_OUT, state, false);
       // Kirim juga ke topik legacy
       client.publish(TOPIC_LEGACY_RELAY2, state, true);
     }
@@ -198,10 +203,10 @@ void loop() {
     Serial.printf("[TOMBOL] BTN3 Mode Kuras -> %s\n", state);
 
     if (client.connected()) {
-      // Kirim perintah ke ESP32 Master
-      client.publish(TOPIC_CMD_KURAS, state, true);
+      // Kirim perintah tanpa retain agar broker tidak mengunci kuras saat reboot
+      client.publish(TOPIC_CMD_KURAS, state, false);
       // Kirim juga ke topik legacy
-      client.publish(TOPIC_LEGACY_KURAS, state, true);
+      client.publish(TOPIC_LEGACY_KURAS, state, false);
     }
   }
 

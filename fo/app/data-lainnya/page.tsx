@@ -16,6 +16,10 @@ interface AWGData {
   mode: string
   kuras: boolean
   auto_restart: boolean
+  // Sensor Lingkungan dari Wemos Tombol (DHT11 & MQ-2)
+  temp_lingkungan: number | null
+  hum_lingkungan: number | null
+  gas_mq2: number | null
 }
 
 interface MqttLog {
@@ -59,7 +63,10 @@ export default function DataLainnyaPage() {
     pompa_out: false,
     mode: 'IDLE',
     kuras: false,
-    auto_restart: true
+    auto_restart: true,
+    temp_lingkungan: null,
+    hum_lingkungan: null,
+    gas_mq2: null
   })
 
   // Manual Fan Slider State
@@ -155,11 +162,17 @@ export default function DataLainnyaPage() {
         setMqttStatus(`Terhubung ke ${isFallback ? 'broker cadangan' : 'broker utama'}`)
       }
 
-      // Subscribe to all AWG topics from main.ino
+      // Subscribe to all AWG topics from main.ino & sensor lingkungan Wemos
       client.subscribe([
         'awg/sensor/water_atas',
         'awg/sensor/water_bawah',
         'awg/sensor/suhu_eva',
+        'awg/sensor/temp',
+        'awg/sensor/humidity',
+        'awg/sensor/air',
+        'sensor/temp',
+        'sensor/humidity',
+        'sensor/air',
         'awg/status/kipas',
         'awg/status/kompresor',
         'awg/status/blower',
@@ -208,6 +221,18 @@ export default function DataLainnyaPage() {
           break
         case 'awg/sensor/suhu_eva':
           setData(prev => ({ ...prev, suhu_eva: isNaN(num) ? null : num }))
+          break
+        case 'awg/sensor/temp':
+        case 'sensor/temp':
+          setData(prev => ({ ...prev, temp_lingkungan: isNaN(num) ? null : num }))
+          break
+        case 'awg/sensor/humidity':
+        case 'sensor/humidity':
+          setData(prev => ({ ...prev, hum_lingkungan: isNaN(num) ? null : num }))
+          break
+        case 'awg/sensor/air':
+        case 'sensor/air':
+          setData(prev => ({ ...prev, gas_mq2: isNaN(num) ? null : num }))
           break
         case 'awg/status/kipas':
           setData(prev => ({ ...prev, kipas_speed: isNaN(num) ? null : num }))
@@ -633,6 +658,45 @@ export default function DataLainnyaPage() {
                 <span>Topik MQTT:</span>
                 <span className="font-mono text-emerald-600 dark:text-emerald-400">awg/sensor/water_bawah</span>
               </div>
+            </div>
+          </div>
+
+          {/* Sensor Lingkungan (DHT11 & MQ-2 dari Wemos Tombol) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
+            {/* Suhu Lingkungan */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-3.5 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Suhu Udara Sekitar</span>
+                <div className="text-xl font-extrabold text-red-500 dark:text-red-400 mt-1">
+                  {data.temp_lingkungan !== null ? `${data.temp_lingkungan} °C` : '-- °C'}
+                </div>
+                <div className="text-[10px] text-gray-400 font-mono">DHT11 • awg/sensor/temp</div>
+              </div>
+              <div className="p-2.5 bg-red-50 dark:bg-red-900/30 text-red-500 rounded-xl text-xl">🌡️</div>
+            </div>
+
+            {/* Kelembaban Lingkungan */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-3.5 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Kelembaban Udara</span>
+                <div className="text-xl font-extrabold text-teal-500 dark:text-teal-400 mt-1">
+                  {data.hum_lingkungan !== null ? `${data.hum_lingkungan} %` : '-- %'}
+                </div>
+                <div className="text-[10px] text-gray-400 font-mono">DHT11 • awg/sensor/humidity</div>
+              </div>
+              <div className="p-2.5 bg-teal-50 dark:bg-teal-900/30 text-teal-500 rounded-xl text-xl">💧</div>
+            </div>
+
+            {/* Gas MQ-2 */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-3.5 shadow-sm border border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase">Kualitas Udara (Gas)</span>
+                <div className="text-xl font-extrabold text-amber-500 dark:text-amber-400 mt-1">
+                  {data.gas_mq2 !== null ? `${data.gas_mq2} ADC` : '-- ADC'}
+                </div>
+                <div className="text-[10px] text-gray-400 font-mono">MQ-02 • awg/sensor/air</div>
+              </div>
+              <div className="p-2.5 bg-amber-50 dark:bg-amber-900/30 text-amber-500 rounded-xl text-xl">💨</div>
             </div>
           </div>
         </div>

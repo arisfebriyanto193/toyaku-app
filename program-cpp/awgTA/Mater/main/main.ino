@@ -72,6 +72,11 @@ const char* TOPIC_SUB_KIPAS           = "awg/cmd/kipas";
 const char* TOPIC_SUB_KURAS           = "awg/cmd/kuras";
 const char* TOPIC_SUB_AUTO_RESTART    = "awg/cmd/auto_restart";   // "ON" / "OFF"
 
+// -- Subscribe Alias Legacy (Kompatibilitas modul tombol / web lama) --
+const char* TOPIC_LEGACY_SUB_KOMP     = "relay/1/status";
+const char* TOPIC_LEGACY_SUB_POUT     = "relay/2/status";
+const char* TOPIC_LEGACY_SUB_KURAS    = "kuras/status";
+
 // ===== DEFINISI PIN SENSOR ANALOG =====
 const int PIN_WATER_LEVEL_ATAS  = 32; // ADC1_CH4
 const int PIN_WATER_LEVEL_BAWAH = 33; // ADC1_CH5
@@ -309,7 +314,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   // -- Perintah Kompresor --
   // ON  = nyalakan produksi + aktifkan auto-restart
   // OFF = matikan produksi + matikan auto-restart (berhenti total)
-  if (topicStr == TOPIC_SUB_KOMPRESOR) {
+  if (topicStr == TOPIC_SUB_KOMPRESOR || topicStr == TOPIC_LEGACY_SUB_KOMP) {
     if (xSemaphoreTake(xMutexState, pdMS_TO_TICKS(100)) == pdTRUE) {
       reqKompresor = (msg == "ON");
       if (msg == "ON") {
@@ -333,7 +338,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   // -- Perintah Pompa Out --
-  if (topicStr == TOPIC_SUB_POMPA_OUT) {
+  if (topicStr == TOPIC_SUB_POMPA_OUT || topicStr == TOPIC_LEGACY_SUB_POUT) {
     bool req = (msg == "ON");
     setPompaOut_safe(req);
     Serial.printf("[CMD] Pompa Out: %s\n", req ? "ON" : "OFF");
@@ -349,7 +354,7 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
   }
 
   // -- Perintah Mode Kuras --
-  if (topicStr == TOPIC_SUB_KURAS) {
+  if (topicStr == TOPIC_SUB_KURAS || topicStr == TOPIC_LEGACY_SUB_KURAS) {
     if (xSemaphoreTake(xMutexState, pdMS_TO_TICKS(100)) == pdTRUE) {
       modeKuras = (msg == "ON");
       Serial.printf("[CMD] Mode Kuras: %s\n", modeKuras ? "AKTIF" : "NONAKTIF");
@@ -378,13 +383,16 @@ bool mqttReconnect() {
     Serial.println(" OK!");
 
     mqtt.subscribe(TOPIC_SUB_KOMPRESOR);
+    mqtt.subscribe(TOPIC_LEGACY_SUB_KOMP);
     mqtt.subscribe(TOPIC_SUB_BLOWER);
     mqtt.subscribe(TOPIC_SUB_POMPA_OUT);
+    mqtt.subscribe(TOPIC_LEGACY_SUB_POUT);
     mqtt.subscribe(TOPIC_SUB_KIPAS);
     mqtt.subscribe(TOPIC_SUB_KURAS);
+    mqtt.subscribe(TOPIC_LEGACY_SUB_KURAS);
     mqtt.subscribe(TOPIC_SUB_AUTO_RESTART);
 
-    Serial.println("[MQTT] Subscribed ke semua topic command.");
+    Serial.println("[MQTT] Subscribed ke semua topic command (modern & legacy).");
     return true;
   } else {
     Serial.printf(" GAGAL (rc=%d). Coba lagi nanti...\n", mqtt.state());
@@ -438,6 +446,7 @@ void publishSemuaStatus(bool paksa) {
 
   if (paksa || _statKompresor != lastStatKompresor) {
     mqtt.publish(TOPIC_PUB_KOMPRESOR, _statKompresor ? "ON" : "OFF", true);
+    mqtt.publish("relay/1/status", _statKompresor ? "ON" : "OFF", true);
     lastStatKompresor = _statKompresor;
   }
 
@@ -453,6 +462,7 @@ void publishSemuaStatus(bool paksa) {
 
   if (paksa || _statPompaOut != lastStatPompaOut) {
     mqtt.publish(TOPIC_PUB_POMPA_OUT, _statPompaOut ? "ON" : "OFF", true);
+    mqtt.publish("relay/2/status", _statPompaOut ? "ON" : "OFF", true);
     lastStatPompaOut = _statPompaOut;
   }
 
@@ -474,6 +484,7 @@ void publishSemuaStatus(bool paksa) {
 
   if (paksa || _modeKuras != lastModeKuras) {
     mqtt.publish(TOPIC_PUB_KURAS, _modeKuras ? "ON" : "OFF", true);
+    mqtt.publish("kuras/status", _modeKuras ? "ON" : "OFF", true);
     lastModeKuras = _modeKuras;
   }
 

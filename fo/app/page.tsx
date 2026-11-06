@@ -128,8 +128,11 @@ export default function Home() {
         'pzem004t/energy',
         'pzem004t/pf',
         'pzem004t/frequency',
-        // Topic dari ESP32 Master AWG (main.ino)
+        // Topic dari ESP32 Master AWG (main.ino) & Wemos Tombol/Sensor
         'awg/sensor/water_atas',
+        'awg/sensor/temp',
+        'awg/sensor/humidity',
+        'awg/sensor/air',
         'awg/status/kompresor',
         'awg/status/pompa_out',
         'awg/status/kuras'
@@ -160,12 +163,15 @@ export default function Home() {
           setSensorData(prev => ({ ...prev, water_level: num }))
           break
         case 'sensor/temp':
+        case 'awg/sensor/temp':
           setSensorData(prev => ({ ...prev, temperature: num }))
           break
         case 'sensor/humidity':
+        case 'awg/sensor/humidity':
           setSensorData(prev => ({ ...prev, humidity: num }))
           break
         case 'sensor/air':
+        case 'awg/sensor/air':
           setSensorData(prev => ({ ...prev, air_quality: num }))
           break
         case 'relay/1/status':

@@ -75,9 +75,13 @@ export default function Home() {
   // Hostname Check
   useEffect(() => {
     const hostname = window.location.hostname
-    const localDomains = ['localhost', '127.0.0.1', '192.168.0.100']
+    const isLocal = ['localhost', '127.0.0.1', '192.168.0.100'].includes(hostname) ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.') ||
+      hostname.endsWith('.local')
 
-    if (localDomains.includes(hostname)) {
+    if (isLocal) {
       setIsRestricted(false)
       setIsControlsUnlocked(true) // Auto unlock on local
     } else {
@@ -94,29 +98,6 @@ export default function Home() {
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
       setDarkMode(true)
       document.documentElement.classList.add('dark')
-    }
-  }, [])
-
-  // Efek untuk koneksi MQTT
-  useEffect(() => {
-    // Tunggu penentuan hostname simple (sebenarnya sync, tapi aman dalam useEffect)
-    const hostname = window.location.hostname
-    const localDomains = ['localhost', '127.0.0.1', '192.168.0.100']
-    const isLocal = localDomains.includes(hostname)
-
-    if (isLocal) {
-      // Logic asli: Coba Primary, fallback ke Secondary
-      connectToMQTT(primaryBroker, false)
-    } else {
-      // Domain logic: Langsung ke Secondary
-      connectToMQTT(fallbackBroker, true, true) // Force secondary only logic
-    }
-
-    // Cleanup function
-    return () => {
-      if (mqttClientRef.current) {
-        mqttClientRef.current.end()
-      }
     }
   }, [])
 
@@ -146,7 +127,12 @@ export default function Home() {
         'pzem004t/power',
         'pzem004t/energy',
         'pzem004t/pf',
-        'pzem004t/frequency'
+        'pzem004t/frequency',
+        // Topic dari ESP32 Master AWG (main.ino)
+        'awg/sensor/water_atas',
+        'awg/status/kompresor',
+        'awg/status/pompa_out',
+        'awg/status/kuras'
       ])
     })
 
@@ -170,6 +156,7 @@ export default function Home() {
       // Update data sensor berdasarkan topic
       switch (topic) {
         case 'sensor/water':
+        case 'awg/sensor/water_atas':
           setSensorData(prev => ({ ...prev, water_level: num }))
           break
         case 'sensor/temp':
@@ -182,9 +169,11 @@ export default function Home() {
           setSensorData(prev => ({ ...prev, air_quality: num }))
           break
         case 'relay/1/status':
+        case 'awg/status/kompresor':
           setRelayStates(prev => ({ ...prev, 1: data === 'ON' }))
           break
         case 'relay/2/status':
+        case 'awg/status/pompa_out':
           setRelayStates(prev => ({ ...prev, 2: data === 'ON' }))
           break
         case 'pzem004t/voltage':
@@ -206,6 +195,7 @@ export default function Home() {
           setSensorData(prev => ({ ...prev, frequency: num }))
           break
         case 'kuras/status':
+        case 'awg/status/kuras':
           setKurasState(data === 'ON')
           break
       }
@@ -213,6 +203,32 @@ export default function Home() {
 
     mqttClientRef.current = client
   }
+
+  // Efek untuk koneksi MQTT
+  useEffect(() => {
+    // Tunggu penentuan hostname simple (sebenarnya sync, tapi aman dalam useEffect)
+    const hostname = window.location.hostname
+    const isLocal = ['localhost', '127.0.0.1', '192.168.0.100'].includes(hostname) ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.') ||
+      hostname.endsWith('.local')
+
+    if (isLocal) {
+      // Logic asli: Coba Primary, fallback ke Secondary
+      connectToMQTT(primaryBroker, false)
+    } else {
+      // Domain logic: Langsung ke Secondary
+      connectToMQTT(fallbackBroker, true, true) // Force secondary only logic
+    }
+
+    // Cleanup function
+    return () => {
+      if (mqttClientRef.current) {
+        mqttClientRef.current.end()
+      }
+    }
+  }, [])
 
   // Fungsi untuk toggle relay
   const toggleRelay = (relayNumber: number) => {
@@ -226,6 +242,11 @@ export default function Home() {
     const topic = `relay/${relayNumber}/status`
 
     mqttClientRef.current.publish(topic, state, { retain: true })
+    if (relayNumber === 1) {
+      mqttClientRef.current.publish('awg/cmd/kompresor', state)
+    } else if (relayNumber === 2) {
+      mqttClientRef.current.publish('awg/cmd/pompa_out', state)
+    }
     setRelayStates(prev => ({ ...prev, [relayNumber]: newState }))
 
     // Tampilkan notifikasi
@@ -241,6 +262,7 @@ export default function Home() {
     const state = newState ? 'ON' : 'OFF'
 
     mqttClientRef.current.publish('kuras/status', state, { retain: true })
+    mqttClientRef.current.publish('awg/cmd/kuras', state)
     setKurasState(newState)
 
     showNotification(
@@ -674,6 +696,13 @@ export default function Home() {
               <button onClick={() => router.push('/recorder')} className="inline-flex items-center px-3.5 py-2 rounded-lg bg-sky-600 text-white text-xs font-medium hover:bg-sky-500 transition-colors duration-300 shadow hover:shadow-md">
                 <span className="mr-1.5">💾</span>
                 Perekam Data MQTT
+              </button>
+
+              <button onClick={() => router.push('/data-lainnya')} className="inline-flex items-center px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors duration-300 shadow hover:shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Data Lainnya
               </button>
             </div>
           </div>

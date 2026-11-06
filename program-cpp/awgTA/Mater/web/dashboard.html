@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWG Dashboard — Atmospheric Water Generator</title>
+  <meta name="description" content="Dashboard monitoring dan kontrol sistem Atmospheric Water Generator (AWG) via MQTT WebSocket">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(30, 41, 59, 0.8);
+      --border: rgba(99, 102, 241, 0.15);
+      --border-active: rgba(99, 102, 241, 0.4);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #6366f1;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #a855f7;
+      --glow-blue: rgba(99, 102, 241, 0.3);
+      --glow-green: rgba(16, 185, 129, 0.3);
+      --glow-red: rgba(239, 68, 68, 0.3);
+      --glow-amber: rgba(245, 158, 11, 0.3);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background animated gradient */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(6, 182, 212, 0.04) 0%, transparent 50%),
+                  radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+      animation: bgShift 20s ease-in-out infinite alternate;
+      z-index: 0;
+      pointer-events: none;
+    }
+    @keyframes bgShift {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(-5%, 3%) rotate(3deg); }
+    }
+
+    .app-container {
+      position: relative; z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 20px var(--glow-blue);
+    }
+    .header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    .header .subtitle { font-size: 0.8rem; color: var(--text-dim); font-weight: 400; margin-top: 2px; }
+
+    .conn-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 0.78rem; font-weight: 600;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+    }
+    .conn-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      transition: var(--transition);
+    }
+    .conn-badge.connected { border-color: rgba(16, 185, 129, 0.3); color: var(--accent-green); }
+    .conn-badge.connected .dot { background: var(--accent-green); box-shadow: 0 0 8px var(--glow-green); }
+    .conn-badge.disconnected { border-color: rgba(239, 68, 68, 0.3); color: var(--accent-red); }
+    .conn-badge.disconnected .dot { background: var(--accent-red); box-shadow: 0 0 8px var(--glow-red); animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* ===== MODE BADGE ===== */
+    .mode-strip {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .mode-badge {
+      padding: 10px 24px;
+      border-radius: 100px;
+      font-size: 0.85rem; font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      transition: var(--transition);
+    }
+    .mode-badge.idle { background: rgba(100, 116, 139, 0.12); color: var(--text-dim); border-color: rgba(100, 116, 139, 0.2); }
+    .mode-badge.produksi { background: rgba(16, 185, 129, 0.1); color: var(--accent-green); border-color: rgba(16, 185, 129, 0.3); box-shadow: 0 0 20px rgba(16,185,129,0.08); }
+    .mode-badge.kuras { background: rgba(245, 158, 11, 0.1); color: var(--accent-amber); border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 20px rgba(245,158,11,0.08); }
+
+    .last-update { font-size: 0.75rem; color: var(--text-dim); }
+
+    /* ===== GRID ===== */
+    .grid { display: grid; gap: 20px; }
+    .grid-sensors { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-controls { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em;
+      color: var(--text-dim); margin: 28px 0 14px; padding-left: 2px;
+    }
+
+    /* ===== SENSOR CARDS ===== */
+    .sensor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .sensor-card:hover { border-color: var(--border-active); transform: translateY(-2px); }
+    .sensor-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+      transition: var(--transition);
+    }
+    .sensor-card.blue::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan)); }
+    .sensor-card.green::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+    .sensor-card.amber::before { background: linear-gradient(90deg, var(--accent-amber), #fbbf24); }
+    .sensor-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), #c084fc); }
+
+    .sensor-icon { font-size: 1.4rem; margin-bottom: 12px; }
+    .sensor-label { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; }
+    .sensor-value { font-size: 2.2rem; font-weight: 800; margin: 6px 0 4px; letter-spacing: -0.03em; line-height: 1; }
+    .sensor-unit { font-size: 0.85rem; font-weight: 400; color: var(--text-secondary); }
+    .sensor-sub { font-size: 0.72rem; color: var(--text-dim); margin-top: 8px; }
+
+    /* Tank visual */
+    .tank-visual {
+      width: 100%; height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .tank-fill {
+      height: 100%; border-radius: 100px;
+      transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.5s;
+    }
+    .tank-fill.low { background: linear-gradient(90deg, var(--accent-red), #f87171); }
+    .tank-fill.mid { background: linear-gradient(90deg, var(--accent-amber), #fbbf24); }
+    .tank-fill.high { background: linear-gradient(90deg, var(--accent-green), #34d399); }
+    .tank-fill.full { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+
+    /* ===== CONTROL CARDS ===== */
+    .control-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      transition: var(--transition);
+    }
+    .control-card:hover { border-color: var(--border-active); }
+
+    .control-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .control-title {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .control-title-icon {
+      width: 36px; height: 36px; border-radius: var(--radius-xs);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .control-title h3 { font-size: 0.95rem; font-weight: 600; }
+    .control-title .pin-info { font-size: 0.68rem; color: var(--text-dim); font-weight: 400; }
+
+    /* Toggle switch */
+    .toggle-wrapper { display: flex; align-items: center; gap: 10px; }
+    .toggle-label { font-size: 0.75rem; font-weight: 600; }
+    .toggle-label.off { color: var(--text-dim); }
+    .toggle-label.on { color: var(--accent-green); }
+
+    .toggle {
+      position: relative;
+      width: 52px; height: 28px;
+      appearance: none; -webkit-appearance: none;
+      background: rgba(100, 116, 139, 0.2);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid rgba(100, 116, 139, 0.15);
+      outline: none;
+    }
+    .toggle::before {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .toggle:checked {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .toggle:checked::before {
+      transform: translateX(24px);
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--glow-green);
+    }
+    .toggle:hover { border-color: var(--border-active); }
+
+    /* Status indicator */
+    .status-indicator {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 100px;
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .status-indicator.on { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); }
+    .status-indicator.off { background: rgba(100, 116, 139, 0.1); color: var(--text-dim); }
+    .status-indicator .dot { width: 6px; height: 6px; border-radius: 50%; }
+    .status-indicator.on .dot { background: var(--accent-green); box-shadow: 0 0 6px var(--glow-green); }
+    .status-indicator.off .dot { background: var(--text-dim); }
+
+    /* Kipas slider */
+    .slider-container { margin-top: 14px; }
+    .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .slider-value { font-size: 1.6rem; font-weight: 800; color: var(--accent-cyan); }
+    .slider-percent { font-size: 0.85rem; font-weight: 400; color: var(--text-secondary); }
+
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 6px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 22px; height: 22px;
+      border-radius: 50%; border: none;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+      cursor: pointer;
+    }
+
+    .slider-ticks {
+      display: flex; justify-content: space-between;
+      margin-top: 6px;
+      font-size: 0.65rem; color: var(--text-dim);
+    }
+
+    /* Kuras mode button */
+    .btn-kuras {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%;
+      padding: 14px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem; font-weight: 700;
+      cursor: pointer;
+      border: 1px solid;
+      transition: var(--transition);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 14px;
+    }
+    .btn-kuras.inactive {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.2);
+      color: var(--accent-amber);
+    }
+    .btn-kuras.inactive:hover {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      box-shadow: 0 4px 20px rgba(245, 158, 11, 0.1);
+    }
+    .btn-kuras.active {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: var(--accent-red);
+      animation: kurasGlow 2s ease-in-out infinite alternate;
+    }
+    @keyframes kurasGlow {
+      0% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.05); }
+      100% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.15); }
+    }
+    .btn-kuras.active:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* ===== LOG PANEL ===== */
+    .log-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      backdrop-filter: blur(20px);
+      margin-top: 20px;
+    }
+    .log-panel h3 {
+      font-size: 0.85rem; font-weight: 600; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .log-content {
+      background: rgba(0,0,0,0.3);
+      border-radius: var(--radius-xs);
+      padding: 14px;
+      max-height: 180px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.72rem;
+      line-height: 1.6;
+      color: var(--text-dim);
+    }
+    .log-content::-webkit-scrollbar { width: 4px; }
+    .log-content::-webkit-scrollbar-track { background: transparent; }
+    .log-content::-webkit-scrollbar-thumb { background: var(--text-dim); border-radius: 100px; }
+
+    .log-entry { padding: 2px 0; }
+    .log-entry .time { color: var(--text-dim); }
+    .log-entry .topic { color: var(--accent-cyan); }
+    .log-entry .msg { color: var(--text-primary); }
+
+    /* ===== SETTINGS BAR ===== */
+    .settings-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 24px;
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      margin-bottom: 24px;
+      backdrop-filter: blur(20px);
+    }
+    .settings-bar label { font-size: 0.75rem; color: var(--text-dim); font-weight: 500; }
+    .settings-bar input[type="text"] {
+      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      padding: 8px 12px;
+      color: var(--text-primary); font-size: 0.8rem;
+      font-family: 'Inter', sans-serif;
+      outline: none; transition: var(--transition);
+      width: 180px;
+    }
+    .settings-bar input[type="text"]:focus { border-color: var(--accent-blue); }
+    .btn-connect {
+      padding: 8px 20px; border-radius: var(--radius-xs);
+      font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; border: 1px solid;
+      transition: var(--transition);
+    }
+    .btn-connect.connect {
+      background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3);
+      color: var(--accent-blue);
+    }
+    .btn-connect.connect:hover { background: rgba(99, 102, 241, 0.2); }
+    .btn-connect.disconnect {
+      background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.3);
+      color: var(--accent-red);
+    }
+    .btn-connect.disconnect:hover { background: rgba(239, 68, 68, 0.18); }
+
+    /* ===== FOOTER ===== */
+    .footer {
+      text-align: center; padding: 30px 0 20px;
+      font-size: 0.7rem; color: var(--text-dim);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      .app-container { padding: 14px; }
+      .header h1 { font-size: 1.15rem; }
+      .sensor-value { font-size: 1.8rem; }
+      .grid-controls { grid-template-columns: 1fr; }
+      .settings-bar { flex-direction: column; align-items: stretch; }
+      .settings-bar input[type="text"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-left">
+        <div class="header-icon">💧</div>
+        <div>
+          <h1>AWG Dashboard</h1>
+          <div class="subtitle">Atmospheric Water Generator — Real-time Monitor & Control</div>
+        </div>
+      </div>
+      <div id="connBadge" class="conn-badge disconnected">
+        <span class="dot"></span>
+        <span id="connText">Terputus</span>
+      </div>
+    </header>
+
+    <!-- SETTINGS BAR -->
+    <div class="settings-bar">
+      <div>
+        <label>MQTT Broker</label><br>
+        <input type="text" id="inputBroker" value="192.168.0.101">
+      </div>
+      <div>
+        <label>WS Port</label><br>
+        <input type="text" id="inputPort" value="9001" style="width:80px;">
+      </div>
+      <button id="btnConnect" class="btn-connect connect" onclick="toggleConnection()">Hubungkan</button>
+    </div>
+
+    <!-- MODE STRIP -->
+    <div class="mode-strip">
+      <div id="modeBadge" class="mode-badge idle">⏸ IDLE</div>
+      <span id="lastUpdate" class="last-update">Belum ada data</span>
+    </div>
+
+    <!-- ===== SENSOR CARDS ===== -->
+    <div class="section-label">📊 Data Sensor</div>
+    <div class="grid grid-sensors">
+      <!-- Tangki Atas -->
+      <div class="sensor-card blue" id="cardTankAtas">
+        <div class="sensor-icon">🔵</div>
+        <div class="sensor-label">Tangki Atas</div>
+        <div class="sensor-value"><span id="valTankAtas">--</span><span class="sensor-unit">%</span></div>
+        <div class="sensor-sub">Tangki penyimpanan utama</div>
+        <div class="tank-visual"><div class="tank-fill" id="fillTankAtas" style="width:0%"></div></div>
+      </div>
+      <!-- Tangki Bawah -->
+      <div class="sensor-card green" id="cardTankBawah">
+        <div class="sensor-icon">🟢</div>
+        <div class="sensor-label">Tangki Bawah</div>
+        <div class="sensor-value"><span id="valTankBawah">--</span><span class="sensor-unit">%</span></div>
+        <div class="sensor-sub">Tangki penampung kondensasi</div>
+        <div class="tank-visual"><div class="tank-fill" id="fillTankBawah" style="width:0%"></div></div>
+      </div>
+      <!-- Suhu Evaporator -->
+      <div class="sensor-card purple" id="cardSuhu">
+        <div class="sensor-icon">🌡️</div>
+        <div class="sensor-label">Suhu Evaporator</div>
+        <div class="sensor-value"><span id="valSuhu">--</span><span class="sensor-unit"> raw</span></div>
+        <div class="sensor-sub">ADC mentah (belum dikalibrasi)</div>
+      </div>
+      <!-- Kipas -->
+      <div class="sensor-card amber" id="cardKipas">
+        <div class="sensor-icon">🌀</div>
+        <div class="sensor-label">Kecepatan Kipas</div>
+        <div class="sensor-value"><span id="valKipasStatus">--</span><span class="sensor-unit">%</span></div>
+        <div class="sensor-sub">PWM Fan — GPIO 2</div>
+      </div>
+    </div>
+
+    <!-- ===== KONTROL AKTUATOR ===== -->
+    <div class="section-label">⚡ Kontrol Aktuator</div>
+    <div class="grid grid-controls">
+
+      <!-- Kompresor -->
+      <div class="control-card">
+        <div class="control-header">
+          <div class="control-title">
+            <div class="control-title-icon" style="background:rgba(99,102,241,0.12);">❄️</div>
+            <div>
+              <h3>Kompresor</h3>
+              <span class="pin-info">R2 — GPIO 14</span>
+            </div>
+          </div>
+          <div id="statusKompresor" class="status-indicator off"><span class="dot"></span>OFF</div>
+        </div>
+        <div class="toggle-wrapper">
+          <span class="toggle-label off">OFF</span>
+          <input type="checkbox" class="toggle" id="toggleKompresor" onchange="sendCmd('awg/cmd/kompresor', this.checked ? 'ON' : 'OFF')">
+          <span class="toggle-label on">ON</span>
+        </div>
+        <div class="sensor-sub" style="margin-top:10px;">Nyalakan produksi (+ blower + kipas otomatis)</div>
+      </div>
+
+      <!-- Pompa Out -->
+      <div class="control-card">
+        <div class="control-header">
+          <div class="control-title">
+            <div class="control-title-icon" style="background:rgba(6,182,212,0.12);">🚰</div>
+            <div>
+              <h3>Pompa Keluar</h3>
+              <span class="pin-info">R3 — GPIO 12</span>
+            </div>
+          </div>
+          <div id="statusPompaOut" class="status-indicator off"><span class="dot"></span>OFF</div>
+        </div>
+        <div class="toggle-wrapper">
+          <span class="toggle-label off">OFF</span>
+          <input type="checkbox" class="toggle" id="togglePompaOut" onchange="sendCmd('awg/cmd/pompa_out', this.checked ? 'ON' : 'OFF')">
+          <span class="toggle-label on">ON</span>
+        </div>
+        <div class="sensor-sub" style="margin-top:10px;">Keluarkan air dari tangki atas</div>
+      </div>
+
+      <!-- Kipas (Slider) -->
+      <div class="control-card">
+        <div class="control-header">
+          <div class="control-title">
+            <div class="control-title-icon" style="background:rgba(245,158,11,0.12);">🌀</div>
+            <div>
+              <h3>Kipas Sirkulasi</h3>
+              <span class="pin-info">PWM — GPIO 2</span>
+            </div>
+          </div>
+        </div>
+        <div class="slider-container">
+          <div class="slider-header">
+            <span style="font-size:0.78rem;color:var(--text-secondary);">Kecepatan</span>
+            <div><span class="slider-value" id="sliderVal">0</span><span class="slider-percent">%</span></div>
+          </div>
+          <input type="range" id="sliderKipas" min="0" max="100" value="0" oninput="updateSlider(this.value)" onchange="sendCmd('awg/cmd/kipas', this.value)">
+          <div class="slider-ticks"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+        </div>
+      </div>
+
+      <!-- Mode Kuras -->
+      <div class="control-card">
+        <div class="control-header">
+          <div class="control-title">
+            <div class="control-title-icon" style="background:rgba(245,158,11,0.12);">🔄</div>
+            <div>
+              <h3>Mode Kuras</h3>
+              <span class="pin-info">Pindahkan air bawah → atas</span>
+            </div>
+          </div>
+          <div id="statusKuras" class="status-indicator off"><span class="dot"></span>OFF</div>
+        </div>
+        <div class="sensor-sub">Pompa bawah nyala terus hingga tangki atas penuh. Produksi dimatikan selama kuras.</div>
+        <button id="btnKuras" class="btn-kuras inactive" onclick="toggleKuras()">
+          🔄 Aktifkan Mode Kuras
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== STATUS AKTUATOR LAINNYA ===== -->
+    <div class="section-label">📋 Status Aktuator</div>
+    <div class="grid grid-sensors">
+      <div class="sensor-card blue">
+        <div class="sensor-icon">💨</div>
+        <div class="sensor-label">Blower</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          <div id="statusBlower" class="status-indicator off"><span class="dot"></span>OFF</div>
+          <span class="sensor-sub" style="margin:0;">R4 — GPIO 27 (otomatis)</span>
+        </div>
+      </div>
+      <div class="sensor-card green">
+        <div class="sensor-icon">⬆️</div>
+        <div class="sensor-label">Pompa Bawah</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+          <div id="statusPompaBawah" class="status-indicator off"><span class="dot"></span>OFF</div>
+          <span class="sensor-sub" style="margin:0;">R1 — GPIO 13 (otomatis)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LOG ===== -->
+    <div class="log-panel">
+      <h3>📝 Log MQTT</h3>
+      <div class="log-content" id="logContent">
+        <div class="log-entry"><span class="time">[--:--:--]</span> Menunggu koneksi MQTT...</div>
+      </div>
+    </div>
+
+    <div class="footer">AWG Dashboard v2.0 — FreeRTOS Dual-Core &bull; MQTT WebSocket &bull; ESP32</div>
+  </div>
+
+  <script>
+    // ===== MQTT CLIENT =====
+    let client = null;
+    let isConnected = false;
+    let kurasActive = false;
+
+    // MQTT Topics
+    const TOPICS_SUB = [
+      'awg/sensor/water_atas',
+      'awg/sensor/water_bawah',
+      'awg/sensor/suhu_eva',
+      'awg/status/kipas',
+      'awg/status/kompresor',
+      'awg/status/blower',
+      'awg/status/pompa_bawah',
+      'awg/status/pompa_out',
+      'awg/status/mode',
+      'awg/status/kuras'
+    ];
+
+    // ===== CONNECTION =====
+    function toggleConnection() {
+      if (isConnected) {
+        disconnect();
+      } else {
+        connect();
+      }
+    }
+
+    function connect() {
+      const broker = document.getElementById('inputBroker').value.trim();
+      const port = document.getElementById('inputPort').value.trim();
+      const url = `ws://${broker}:${port}/mqtt`;
+
+      addLog('system', `Menghubungkan ke ${url}...`);
+
+      try {
+        client = mqtt.connect(url, {
+          clientId: 'AWG_Dashboard_' + Math.random().toString(16).slice(2, 8),
+          clean: true,
+          connectTimeout: 5000,
+          reconnectPeriod: 0 // Manual reconnect
+        });
+
+        client.on('connect', () => {
+          isConnected = true;
+          updateConnBadge(true);
+          addLog('system', 'Terhubung ke MQTT broker!');
+
+          // Subscribe all topics
+          TOPICS_SUB.forEach(t => client.subscribe(t));
+          addLog('system', `Subscribed ke ${TOPICS_SUB.length} topics`);
+        });
+
+        client.on('message', (topic, message) => {
+          const msg = message.toString();
+          handleMessage(topic, msg);
+          addLog(topic, msg);
+        });
+
+        client.on('error', (err) => {
+          addLog('error', `Error: ${err.message}`);
+        });
+
+        client.on('close', () => {
+          isConnected = false;
+          updateConnBadge(false);
+          addLog('system', 'Koneksi terputus.');
+        });
+
+        client.on('offline', () => {
+          isConnected = false;
+          updateConnBadge(false);
+        });
+
+      } catch (e) {
+        addLog('error', `Gagal: ${e.message}`);
+      }
+    }
+
+    function disconnect() {
+      if (client) {
+        client.end(true);
+        client = null;
+      }
+      isConnected = false;
+      updateConnBadge(false);
+      addLog('system', 'Disconnected.');
+    }
+
+    // ===== HANDLE INCOMING MESSAGES =====
+    function handleMessage(topic, msg) {
+      const now = new Date().toLocaleTimeString('id-ID');
+      document.getElementById('lastUpdate').textContent = `Terakhir update: ${now}`;
+
+      switch (topic) {
+        case 'awg/sensor/water_atas':
+          updateTank('Atas', parseInt(msg));
+          break;
+        case 'awg/sensor/water_bawah':
+          updateTank('Bawah', parseInt(msg));
+          break;
+        case 'awg/sensor/suhu_eva':
+          document.getElementById('valSuhu').textContent = msg;
+          break;
+        case 'awg/status/kipas':
+          document.getElementById('valKipasStatus').textContent = msg;
+          document.getElementById('sliderKipas').value = parseInt(msg);
+          document.getElementById('sliderVal').textContent = msg;
+          break;
+        case 'awg/status/kompresor':
+          updateStatusBadge('statusKompresor', msg === 'ON');
+          document.getElementById('toggleKompresor').checked = (msg === 'ON');
+          break;
+        case 'awg/status/blower':
+          updateStatusBadge('statusBlower', msg === 'ON');
+          break;
+        case 'awg/status/pompa_bawah':
+          updateStatusBadge('statusPompaBawah', msg === 'ON');
+          break;
+        case 'awg/status/pompa_out':
+          updateStatusBadge('statusPompaOut', msg === 'ON');
+          document.getElementById('togglePompaOut').checked = (msg === 'ON');
+          break;
+        case 'awg/status/mode':
+          updateModeBadge(msg);
+          break;
+        case 'awg/status/kuras':
+          kurasActive = (msg === 'ON');
+          updateStatusBadge('statusKuras', kurasActive);
+          updateKurasButton();
+          break;
+      }
+    }
+
+    // ===== UPDATE UI =====
+    function updateTank(which, level) {
+      const valEl = document.getElementById(`valTank${which}`);
+      const fillEl = document.getElementById(`fillTank${which}`);
+      valEl.textContent = level;
+      fillEl.style.width = level + '%';
+
+      // Color class
+      fillEl.className = 'tank-fill';
+      if (level >= 100) fillEl.classList.add('full');
+      else if (level >= 70) fillEl.classList.add('high');
+      else if (level >= 30) fillEl.classList.add('mid');
+      else fillEl.classList.add('low');
+    }
+
+    function updateStatusBadge(id, isOn) {
+      const el = document.getElementById(id);
+      el.className = 'status-indicator ' + (isOn ? 'on' : 'off');
+      el.innerHTML = `<span class="dot"></span>${isOn ? 'ON' : 'OFF'}`;
+    }
+
+    function updateModeBadge(mode) {
+      const el = document.getElementById('modeBadge');
+      el.className = 'mode-badge';
+      switch (mode.toUpperCase()) {
+        case 'PRODUKSI':
+          el.classList.add('produksi');
+          el.textContent = '⚡ PRODUKSI';
+          break;
+        case 'KURAS':
+          el.classList.add('kuras');
+          el.textContent = '🔄 KURAS';
+          break;
+        default:
+          el.classList.add('idle');
+          el.textContent = '⏸ IDLE';
+      }
+    }
+
+    function updateConnBadge(connected) {
+      const badge = document.getElementById('connBadge');
+      const text = document.getElementById('connText');
+      const btn = document.getElementById('btnConnect');
+
+      if (connected) {
+        badge.className = 'conn-badge connected';
+        text.textContent = 'Terhubung';
+        btn.className = 'btn-connect disconnect';
+        btn.textContent = 'Putuskan';
+      } else {
+        badge.className = 'conn-badge disconnected';
+        text.textContent = 'Terputus';
+        btn.className = 'btn-connect connect';
+        btn.textContent = 'Hubungkan';
+      }
+    }
+
+    function updateSlider(val) {
+      document.getElementById('sliderVal').textContent = val;
+    }
+
+    function updateKurasButton() {
+      const btn = document.getElementById('btnKuras');
+      if (kurasActive) {
+        btn.className = 'btn-kuras active';
+        btn.innerHTML = '⏹ Hentikan Mode Kuras';
+      } else {
+        btn.className = 'btn-kuras inactive';
+        btn.innerHTML = '🔄 Aktifkan Mode Kuras';
+      }
+    }
+
+    // ===== SEND COMMANDS =====
+    function sendCmd(topic, msg) {
+      if (!isConnected || !client) {
+        addLog('error', 'Tidak terhubung! Hubungkan MQTT terlebih dahulu.');
+        return;
+      }
+      client.publish(topic, msg);
+      addLog('cmd', `${topic} → ${msg}`);
+    }
+
+    function toggleKuras() {
+      kurasActive = !kurasActive;
+      sendCmd('awg/cmd/kuras', kurasActive ? 'ON' : 'OFF');
+      updateKurasButton();
+    }
+
+    // ===== LOG =====
+    const MAX_LOG = 100;
+    function addLog(type, msg) {
+      const el = document.getElementById('logContent');
+      const time = new Date().toLocaleTimeString('id-ID');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+
+      let color = 'var(--text-dim)';
+      if (type === 'error') color = 'var(--accent-red)';
+      else if (type === 'system') color = 'var(--accent-purple)';
+      else if (type === 'cmd') color = 'var(--accent-amber)';
+      else color = 'var(--accent-cyan)';
+
+      entry.innerHTML = `<span class="time">[${time}]</span> <span style="color:${color}">${type === 'cmd' ? '→' : '←'} ${type !== 'system' && type !== 'error' && type !== 'cmd' ? type + ': ' : ''}${msg}</span>`;
+
+      el.appendChild(entry);
+
+      // Limit log entries
+      while (el.children.length > MAX_LOG) {
+        el.removeChild(el.firstChild);
+      }
+
+      el.scrollTop = el.scrollHeight;
+    }
+  </script>
+</body>
+</html>
